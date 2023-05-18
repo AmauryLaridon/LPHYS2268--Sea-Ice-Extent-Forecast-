@@ -4,7 +4,7 @@
 # Author : Amaury Laridon
 # Course : LPHYS2268 -Forecasts, predictions and projections in Climate Science
 # Goal : Loading of the time series of September sea ice extent and seasonal prediction analysis
-#        More information on the GitHub Page of the project : https://github.com/AugustinLambotte/LPHYS2268
+#        More information on the GitHub Page of the project : https://github.com/AmauryLaridon/LPHYS2268-Sea-Ice-Extent-Forecast
 # Date : 11/04/23
 ############################################################################################################################
 #################################################### Packages ##############################################################
@@ -34,7 +34,8 @@ figure = plt.figure(figsize=(16, 10))
 ### Data parameters ###
 data_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Data/osisaf_nh_sie_monthly.nc"
 save_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Figures/"
-
+transp = False  # Used for saving figures
+# plt.style.use("dark_background")
 ##################################################### Data Plotting #########################################################
 # Correspond to question 3 of the report
 ##### Extraction of the Data #####
@@ -81,7 +82,7 @@ def plot_sie(data):
     plt.ylabel(r"Sea Ice Extent [$10^6$ km²]", size=25)
     plt.tick_params(axis="both", labelsize=20)
     plt.grid()
-    plt.savefig(save_dir + "Sept_SIE_Data/sept_sie.png", dpi=300)
+    plt.savefig(save_dir + "Sept_SIE_Data/sept_sie.png", dpi=300, transparent=transp)
     # plt.show()
     plt.clf()
 
@@ -123,7 +124,9 @@ def plot_trend_line_forecast(trend_line):
     plt.tick_params(axis="both", labelsize=20)
     plt.legend(fontsize=20)
     plt.grid()
-    plt.savefig(save_dir + "Sept_SIE_Data/sept_sie_trend_line.png", dpi=300)
+    plt.savefig(
+        save_dir + "Sept_SIE_Data/sept_sie_trend_line.png", dpi=300, transparent=transp
+    )
     # plt.show()
     plt.clf()
 
@@ -211,7 +214,11 @@ def plot_event_freq(data, time_range_data):
         plt.ylabel("Frequency", size=25)
         plt.tick_params(axis="both", labelsize=20)
         plt.grid()
-        plt.savefig(save_dir + "Event/event_mode" + str(i + 1) + "_freq.png", dpi=300)
+        plt.savefig(
+            save_dir + "Event/event_mode" + str(i + 1) + "_freq.png",
+            dpi=300,
+            transparent=transp,
+        )
         # plt.show()
         plt.clf()
 
@@ -444,6 +451,7 @@ def plot_forecast1(forecast, year_f_forecast, trend_line_opt, method):
     plt.savefig(
         save_dir + "Sept_SIE_Forecast/SIE_Sept_" + method + "_Forecast" + mod_save_dir,
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -539,6 +547,7 @@ def plot_forecast2(
         + "_Forecast"
         + mod_save_dir,
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -613,6 +622,7 @@ def plot_event_frcst_prob(data, time_range_data, method):
         plt.savefig(
             save_dir + "Event/event_mode" + str(i + 1) + "_" + method + "_prob.png",
             dpi=300,
+            transparent=transp,
         )
         # plt.show()
         plt.clf()
@@ -658,6 +668,7 @@ def plot_event_freq_and_prob(time_range, data_freq, data_prob, method):
     plt.savefig(
         save_dir + "Event/prob_event_" + method + "_event_freq_obs_subplots.png",
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -708,6 +719,7 @@ def plot_event_freq_and_prob_and_clim(
     plt.savefig(
         save_dir + "Event/prob_event_" + method + "_event_freq_obs_subplots.png",
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -745,6 +757,7 @@ def plot_event_freq_and_prob_and_clim_no_sub(
             + method
             + "_prob_and_clim.png",
             dpi=300,
+            transparent=transp,
         )
         # plt.show()
         plt.clf()
@@ -832,22 +845,34 @@ def trend_bias(time_range, data_obs, data_frcst):
 def data_plot1_pp(time_range, data_obs, data_frcst, method):
     """Plot of the scatter plot of observed data against forecast data and use of post-processing"""
 
+    figure = plt.figure(figsize=(16, 10))
     ### Scatter plot and y=x plot ###
-    plt.scatter(data_frcst[0], data_obs, color="0.4", label="Raw " + method)
-    plt.plot((0.0, 100), (0.0, 100), "b--", label="y=x")
+    plt.scatter(data_frcst[0], data_obs, color="0.4", label="Raw " + method, s=400)
+    plt.plot(
+        (0.0, 100), (0.0, 100), "tab:green", label="y=x", linewidth=8, linestyle="--"
+    )
 
     ### Post processing ###
     ## Bias of the mean ##
     new_bias_frcst_1 = mean_bias(data_obs, data_frcst[0])
     # Biais of the mean plot #
     """plt.scatter(
-        new_bias_frcst_1, data_obs, color="orange", label="PP Bias of the mean " + method
+        new_bias_frcst_1,
+        data_obs,
+        color="tab:orange",
+        label="PP Bias of the mean " + method,
+        s=400,
     )"""
     ## Bias of the variability ##
     new_bias_frcst_2 = var_bias(data_obs, new_bias_frcst_1)
     # Biais of the mean plot #
-    """plt.scatter(
-        new_bias_frcst_2, data_obs, color="orange", label="PP Bias of mean + var " + method
+    """
+    plt.scatter(
+        new_bias_frcst_2,
+        data_obs,
+        color="tab:orange",
+        label="PP Bias of mean + var " + method,
+        s=400,
     )"""
     ## Bias of the trend line ##
     new_bias_frcst_3 = trend_bias(time_range, data_obs, new_bias_frcst_2)
@@ -855,22 +880,25 @@ def data_plot1_pp(time_range, data_obs, data_frcst, method):
     plt.scatter(
         new_bias_frcst_3,
         data_obs,
-        color="orange",
+        color="tab:orange",
         label="PP Bias of (mean + var + trend) " + method,
+        s=400,
     )
 
     ### Cosmetics ###
-    plt.title("Observed against Forecast Arctic Sea Ice Evolution", size=14)
-    plt.xlabel(r"Forecast SIE $[10^6 km^2]$", size=10)
-    plt.ylabel(r"Observed SIE $[10^6 km^2]$", size=10)
+    plt.title("Observed against Forecast Arctic Sea Ice Evolution", size=38)
+    plt.xlabel(r"Forecast SIE $[10^6 km^2]$", size=36)
+    plt.ylabel(r"Observed SIE $[10^6 km^2]$", size=36)
     plt.xlim(4.1, 8.5)
     plt.ylim(4, 8.5)
-    plt.tick_params(axis="both", labelsize=10)
-    plt.legend()
+    plt.tick_params(axis="both", labelsize=36)
+    plt.legend(fontsize=26)
     plt.grid()
     plt.savefig(
-        save_dir + "Post-Processing/data_plot_verif_Biais_Mean & Var & Trend_" + method,
+        save_dir
+        + "Post-Processing/data_plot_verif_Biais_Mean_and_Var_and_Trend_APF.png",
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -932,7 +960,11 @@ def data_plot2_pp(time_range, data_obs, data_frcst, method):
 
     # fig.legend(loc="upper right")
     fig.tight_layout()
-    plt.savefig(save_dir + "Post-Processing/subplot_data_pp_" + method, dpi=300)
+    plt.savefig(
+        save_dir + "Post-Processing/subplot_data_pp_" + method,
+        dpi=300,
+        transparent=transp,
+    )
     # plt.show()
     plt.clf()
 
@@ -975,14 +1007,16 @@ def data_plot3_pp(time_range, data_obs, data_frcst, method):
 
     # fig.legend(loc="upper right")
     fig.tight_layout()
-    plt.savefig(save_dir + "Post-Processing/data_pp_" + method, dpi=300)
+    plt.savefig(
+        save_dir + "Post-Processing/data_pp_" + method, dpi=300, transparent=transp
+    )
     # plt.show()
     plt.clf()
 
 
 def data_plot4_pp(time_range, data_obs, data_frcst1, data_frcst2, method1, method2):
     """Plot of the two post-process forecast, the two non post-process forecast and the observations"""
-    fig = plt.figure(figsize=(20, 10))
+    fig = plt.figure(figsize=(20, 14))
 
     ### Post processing ###
     ## Bias of the mean ##
@@ -1001,6 +1035,7 @@ def data_plot4_pp(time_range, data_obs, data_frcst1, data_frcst2, method1, metho
         linestyle="--",
         label=method1 + " Forecast No PP",
         color="0.4",
+        linewidth=6,
     )
     plt.plot(
         data_frcst2[4],
@@ -1008,6 +1043,7 @@ def data_plot4_pp(time_range, data_obs, data_frcst1, data_frcst2, method1, metho
         linestyle="dotted",
         label=method2 + " Forecast No PP",
         color="0.4",
+        linewidth=6,
     )
     plt.errorbar(
         data_frcst1[4],
@@ -1015,8 +1051,10 @@ def data_plot4_pp(time_range, data_obs, data_frcst1, data_frcst2, method1, metho
         2 * data_frcst1[2],
         linestyle="None",
         marker="^",
-        label=method1 + " Fortab:blueecast PP",
-        color="orange",
+        label=method1 + " PP",
+        color="tab:orange",
+        elinewidth=4,
+        markersize="20",
     )
     plt.errorbar(
         data_frcst2[4],
@@ -1024,21 +1062,32 @@ def data_plot4_pp(time_range, data_obs, data_frcst1, data_frcst2, method1, metho
         2 * data_frcst2[2],
         linestyle="None",
         marker="^",
-        label=method2 + " Forecast PP",
-        color="tab:blue",
+        label=method2 + " PP",
+        color="tab:red",
+        elinewidth=4,
+        markersize="20",
     )
-    plt.plot(data_frcst1[4], data_frcst1[3][2:], label="Observed Data", color="g")
-    plt.xlabel("Year", size=20)
+    plt.plot(
+        data_frcst1[4],
+        data_frcst1[3][2:],
+        label="Observed Data",
+        color="tab:green",
+        linewidth=6,
+    )
+    plt.xlabel("Year", size=45)
     # axs[1].set_xticks(np.arange(year_0 + 2, year_f_forecast, 5))
-    plt.ylabel(r"SIE [$10^6$ km²]", size=20)
-    plt.title("SIE Forecast", size=25)
+    plt.ylabel(r"SIE [$10^6$ km²]", size=45)
+    plt.tick_params(axis="both", labelsize=45)
+    plt.title("SIE Forecast", size=43)
     plt.grid()
-    plt.legend(fontsize=18)
+    plt.legend(fontsize=30)
 
     # fig.legend(loc="upper right")
     fig.tight_layout()
     plt.savefig(
-        save_dir + "Post-Processing/data_pp_" + method1 + "&" + method2, dpi=300
+        save_dir + "Post-Processing/data_pp_" + method1 + "&" + method2,
+        dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -1263,6 +1312,7 @@ if __name__ == "__main__":
         data_frcst=apf_forecast,
         method="APF",
     )
+
     ### CAPF Forecast ###
     data_plot1_pp(
         time_range=capf_forecast[-1],

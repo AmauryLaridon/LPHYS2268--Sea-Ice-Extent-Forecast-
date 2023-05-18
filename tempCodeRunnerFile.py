@@ -4,7 +4,7 @@
 # Author : Amaury Laridon
 # Course : LPHYS2268 -Forecasts, predictions and projections in Climate Science
 # Goal : Loading of the time series of September sea ice extent and seasonal prediction analysis
-#        More information on the GitHub Page of the project : https://github.com/AugustinLambotte/LPHYS2268
+#        More information on the GitHub Page of the project : https://github.com/AmauryLaridon/LPHYS2268-Sea-Ice-Extent-Forecast
 # Date : 11/04/23
 ############################################################################################################################
 #################################################### Packages ##############################################################
@@ -34,7 +34,8 @@ figure = plt.figure(figsize=(16, 10))
 ### Data parameters ###
 data_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Data/osisaf_nh_sie_monthly.nc"
 save_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Figures/"
-
+transp = True  # Used for saving figures
+# plt.style.use("dark_background")
 ##################################################### Data Plotting #########################################################
 # Correspond to question 3 of the report
 ##### Extraction of the Data #####
@@ -81,7 +82,7 @@ def plot_sie(data):
     plt.ylabel(r"Sea Ice Extent [$10^6$ km²]", size=25)
     plt.tick_params(axis="both", labelsize=20)
     plt.grid()
-    plt.savefig(save_dir + "Sept_SIE_Data/sept_sie.png", dpi=300)
+    plt.savefig(save_dir + "Sept_SIE_Data/sept_sie.png", dpi=300, transparent=transp)
     # plt.show()
     plt.clf()
 
@@ -123,7 +124,9 @@ def plot_trend_line_forecast(trend_line):
     plt.tick_params(axis="both", labelsize=20)
     plt.legend(fontsize=20)
     plt.grid()
-    plt.savefig(save_dir + "Sept_SIE_Data/sept_sie_trend_line.png", dpi=300)
+    plt.savefig(
+        save_dir + "Sept_SIE_Data/sept_sie_trend_line.png", dpi=300, transparent=transp
+    )
     # plt.show()
     plt.clf()
 
@@ -211,7 +214,11 @@ def plot_event_freq(data, time_range_data):
         plt.ylabel("Frequency", size=25)
         plt.tick_params(axis="both", labelsize=20)
         plt.grid()
-        plt.savefig(save_dir + "Event/event_mode" + str(i + 1) + "_freq.png", dpi=300)
+        plt.savefig(
+            save_dir + "Event/event_mode" + str(i + 1) + "_freq.png",
+            dpi=300,
+            transparent=transp,
+        )
         # plt.show()
         plt.clf()
 
@@ -444,6 +451,7 @@ def plot_forecast1(forecast, year_f_forecast, trend_line_opt, method):
     plt.savefig(
         save_dir + "Sept_SIE_Forecast/SIE_Sept_" + method + "_Forecast" + mod_save_dir,
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -539,6 +547,7 @@ def plot_forecast2(
         + "_Forecast"
         + mod_save_dir,
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -613,6 +622,7 @@ def plot_event_frcst_prob(data, time_range_data, method):
         plt.savefig(
             save_dir + "Event/event_mode" + str(i + 1) + "_" + method + "_prob.png",
             dpi=300,
+            transparent=transp,
         )
         # plt.show()
         plt.clf()
@@ -658,6 +668,7 @@ def plot_event_freq_and_prob(time_range, data_freq, data_prob, method):
     plt.savefig(
         save_dir + "Event/prob_event_" + method + "_event_freq_obs_subplots.png",
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -708,6 +719,7 @@ def plot_event_freq_and_prob_and_clim(
     plt.savefig(
         save_dir + "Event/prob_event_" + method + "_event_freq_obs_subplots.png",
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
@@ -745,6 +757,7 @@ def plot_event_freq_and_prob_and_clim_no_sub(
             + method
             + "_prob_and_clim.png",
             dpi=300,
+            transparent=transp,
         )
         # plt.show()
         plt.clf()
@@ -829,25 +842,25 @@ def trend_bias(time_range, data_obs, data_frcst):
 ### Display ###
 
 
-def data_plot1_pp(time_range, data_obs, data_frcst):
+def data_plot1_pp(time_range, data_obs, data_frcst, method):
     """Plot of the scatter plot of observed data against forecast data and use of post-processing"""
 
     ### Scatter plot and y=x plot ###
-    plt.scatter(data_frcst, data_obs, color="0.4", label="Raw APF")
+    plt.scatter(data_frcst[0], data_obs, color="0.4", label="Raw " + method)
     plt.plot((0.0, 100), (0.0, 100), "b--", label="y=x")
 
     ### Post processing ###
     ## Bias of the mean ##
-    new_bias_frcst_1 = mean_bias(data_obs, data_frcst)
+    new_bias_frcst_1 = mean_bias(data_obs, data_frcst[0])
     # Biais of the mean plot #
     """plt.scatter(
-        new_bias_frcst_1, data_obs, color="orange", label="PP Bias of the mean APF"
+        new_bias_frcst_1, data_obs, color="orange", label="PP Bias of the mean " + method
     )"""
     ## Bias of the variability ##
     new_bias_frcst_2 = var_bias(data_obs, new_bias_frcst_1)
     # Biais of the mean plot #
     """plt.scatter(
-        new_bias_frcst_2, data_obs, color="orange", label="PP Bias of mean + var APF"
+        new_bias_frcst_2, data_obs, color="orange", label="PP Bias of mean + var " + method
     )"""
     ## Bias of the trend line ##
     new_bias_frcst_3 = trend_bias(time_range, data_obs, new_bias_frcst_2)
@@ -856,7 +869,7 @@ def data_plot1_pp(time_range, data_obs, data_frcst):
         new_bias_frcst_3,
         data_obs,
         color="orange",
-        label="PP Bias of (mean + var + trend) APF",
+        label="PP Bias of (mean + var + trend) " + method,
     )
 
     ### Cosmetics ###
@@ -869,20 +882,21 @@ def data_plot1_pp(time_range, data_obs, data_frcst):
     plt.legend()
     plt.grid()
     plt.savefig(
-        save_dir + "Post-Processing/data_plot_verif_Biais_Mean & Var & Trend_APF",
+        save_dir + "Post-Processing/data_plot_verif_Biais_Mean & Var & Trend_" + method,
         dpi=300,
+        transparent=transp,
     )
     # plt.show()
     plt.clf()
 
 
-def data_plot2_pp(time_range, data_obs, data_frcst):
+def data_plot2_pp(time_range, data_obs, data_frcst, method):
     """SubPlot of the scatter plot of observed data against forecast data and use of post-processing and the normal data plot against the years"""
     fig = plt.figure(figsize=(20, 10))
 
     ### Post processing ###
     ## Bias of the mean ##
-    new_bias_frcst_1 = mean_bias(data_obs, data_frcst)
+    new_bias_frcst_1 = mean_bias(data_obs, data_frcst[0])
     ## Bias of the variability & mean ##
     new_bias_frcst_2 = var_bias(data_obs, new_bias_frcst_1)
     ## Bias of the trend line & variability & mean ##
@@ -890,13 +904,13 @@ def data_plot2_pp(time_range, data_obs, data_frcst):
 
     fig, axs = plt.subplots(1, 2)
 
-    axs[0].scatter(data_frcst, data_obs, color="0.4", label="Raw APF")
+    axs[0].scatter(data_frcst[0], data_obs, color="0.4", label="Raw " + method)
     axs[0].plot((0.0, 100), (0.0, 100), "b--", label="y=x")
     axs[0].scatter(
         new_bias_frcst_3,
         data_obs,
         color="orange",
-        label="PP Bias of (mean + var + trend) APF",
+        label="PP Bias of (mean + var + trend) " + method,
     )
     axs[0].set_xlabel(r"Forecast SIE $[10^6 km^2]$", size=10)
     axs[0].set_ylabel(r"Observed SIE $[10^6 km^2]$", size=10)
@@ -907,75 +921,147 @@ def data_plot2_pp(time_range, data_obs, data_frcst):
     axs[0].legend()
 
     axs[1].plot(
-        apf_forecast[4],
-        apf_forecast[0],
+        data_frcst[4],
+        data_frcst[0],
         linestyle="--",
-        label="APF Forecast No PP",
+        label=method + " Forecast No PP",
         color="0.4",
     )
     axs[1].errorbar(
-        apf_forecast[4],
+        data_frcst[4],
         new_bias_frcst_3,
-        2 * apf_forecast[2],
+        2 * data_frcst[2],
         linestyle="None",
         marker="^",
-        label="APF Forecast PP",
+        label=method + " Forecast PP",
         color="orange",
     )
-    axs[1].plot(apf_forecast[4], apf_forecast[3][2:], label="Observed Data", color="g")
+    axs[1].plot(data_frcst[4], data_frcst[3][2:], label="Observed Data", color="g")
     axs[1].set_xlabel("Year", size=10)
     # axs[1].set_xticks(np.arange(year_0 + 2, year_f_forecast, 5))
     axs[1].set_ylabel(r"SIE [$10^6$ km²]", size=10)
-    axs[1].set_title("SIE APF-Forecast ")
+    axs[1].set_title("SIE " + method + "-Forecast ")
     axs[1].grid()
     axs[1].legend()
 
     # fig.legend(loc="upper right")
     fig.tight_layout()
-    plt.savefig(save_dir + "Post-Processing/subplot_data_pp", dpi=300)
+    plt.savefig(
+        save_dir + "Post-Processing/subplot_data_pp_" + method,
+        dpi=300,
+        transparent=transp,
+    )
     # plt.show()
     plt.clf()
 
 
-def data_plot3_pp(time_range, data_obs, data_frcst):
-    """SubPlot of the scatter plot of observed data against forecast data and use of post-processing and the normal data plot against the years"""
+def data_plot3_pp(time_range, data_obs, data_frcst, method):
+    """Plot of the post-process forecast, the non post-process forecast and the observations"""
     fig = plt.figure(figsize=(20, 10))
 
     ### Post processing ###
     ## Bias of the mean ##
-    new_bias_frcst_1 = mean_bias(data_obs, data_frcst)
+    new_bias_frcst_1 = mean_bias(data_obs, data_frcst[0])
     ## Bias of the variability & mean ##
     new_bias_frcst_2 = var_bias(data_obs, new_bias_frcst_1)
     ## Bias of the trend line & variability & mean ##
     new_bias_frcst_3 = trend_bias(time_range, data_obs, new_bias_frcst_2)
 
     plt.plot(
-        apf_forecast[4],
-        apf_forecast[0],
+        data_frcst[4],
+        data_frcst[0],
         linestyle="--",
-        label="APF Forecast No PP",
+        label=method + " Forecast No PP",
         color="0.4",
     )
     plt.errorbar(
-        apf_forecast[4],
+        data_frcst[4],
         new_bias_frcst_3,
-        2 * apf_forecast[2],
+        2 * data_frcst[2],
         linestyle="None",
         marker="^",
-        label="APF Forecast PP",
+        label=method + " Forecast PP",
         color="orange",
     )
-    plt.plot(apf_forecast[4], apf_forecast[3][2:], label="Observed Data", color="g")
+    plt.plot(data_frcst[4], data_frcst[3][2:], label="Observed Data", color="g")
     plt.xlabel("Year", size=20)
     # axs[1].set_xticks(np.arange(year_0 + 2, year_f_forecast, 5))
     plt.ylabel(r"SIE [$10^6$ km²]", size=20)
-    plt.title("SIE APF-Forecast", size=25)
+    plt.title("SIE " + method + "-Forecast", size=25)
     plt.grid()
     plt.legend(fontsize=18)
 
     # fig.legend(loc="upper right")
     fig.tight_layout()
-    plt.savefig(save_dir + "Post-Processing/data_pp", dpi=300)
+    plt.savefig(
+        save_dir + "Post-Processing/data_pp_" + method, dpi=300, transparent=transp
+    )
+    # plt.show()
+    plt.clf()
+
+
+def data_plot4_pp(time_range, data_obs, data_frcst1, data_frcst2, method1, method2):
+    """Plot of the two post-process forecast, the two non post-process forecast and the observations"""
+    fig = plt.figure(figsize=(20, 10))
+
+    ### Post processing ###
+    ## Bias of the mean ##
+    new_bias_frcst_1 = mean_bias(data_obs, data_frcst1[0])
+    new_bias_frcst_12 = mean_bias(data_obs, data_frcst2[0])
+    ## Bias of the variability & mean ##
+    new_bias_frcst_2 = var_bias(data_obs, new_bias_frcst_1)
+    new_bias_frcst_22 = var_bias(data_obs, new_bias_frcst_12)
+    ## Bias of the trend line & variability & mean ##
+    new_bias_frcst_3 = trend_bias(time_range, data_obs, new_bias_frcst_2)
+    new_bias_frcst_32 = trend_bias(time_range, data_obs, new_bias_frcst_22)
+
+    plt.plot(
+        data_frcst1[4],
+        data_frcst1[0],
+        linestyle="--",
+        label=method1 + " Forecast No PP",
+        color="0.4",
+    )
+    plt.plot(
+        data_frcst2[4],
+        data_frcst2[0],
+        linestyle="dotted",
+        label=method2 + " Forecast No PP",
+        color="0.4",
+    )
+    plt.errorbar(
+        data_frcst1[4],
+        new_bias_frcst_3,
+        2 * data_frcst1[2],
+        linestyle="None",
+        marker="^",
+        label=method1 + " Fortab:blueecast PP",
+        color="orange",
+    )
+    plt.errorbar(
+        data_frcst2[4],
+        new_bias_frcst_32,
+        2 * data_frcst2[2],
+        linestyle="None",
+        marker="^",
+        label=method2 + " Forecast PP",
+        color="tab:blue",
+    )
+    plt.plot(data_frcst1[4], data_frcst1[3][2:], label="Observed Data", color="g")
+    plt.xlabel("Year", size=20)
+    # axs[1].set_xticks(np.arange(year_0 + 2, year_f_forecast, 5))
+    plt.ylabel(r"SIE [$10^6$ km²]", size=20)
+    plt.title("SIE Forecast", size=25)
+    plt.grid()
+    plt.legend(fontsize=18)
+
+    # fig.legend(loc="upper right")
+    fig.tight_layout()
+    plt.savefig(
+        save_dir + "Post-Processing/data_pp_" + method1 + "&" + method2,
+        dpi=300,
+        transparent=transp,
+    )
     # plt.show()
     plt.clf()
 
@@ -1105,7 +1191,7 @@ if __name__ == "__main__":
         method="CAPF",
     )
     ##########################################################################################################
-    ##### Verification of retrospective forecast #####
+    ##### Verification of retrospective forecast without Post Processing #####
     ### Brier Score computation ###
     bs_mode_APF = np.zeros(3)
     bs_mode_CAPF = np.zeros(3)
@@ -1119,7 +1205,7 @@ if __name__ == "__main__":
         "September SIE will be less than previous year",
     ]
     print(
-        "                                                    VERIFICATION                                                   |"
+        "                                    VERIFICATION NO POST-PROCESSING                                                 |"
     )
     print(
         "--------------------------------------------------------------------------------------------------------------------"
@@ -1178,8 +1264,188 @@ if __name__ == "__main__":
     )
     ##########################################################################################################
     ##### Post Processing of retrospective forecast #####
-    data_plot1_pp(apf_forecast[-1], sept_sie[2:], apf_forecast[0])
-    data_plot2_pp(apf_forecast[-1], sept_sie[2:], apf_forecast[0])
-    data_plot3_pp(apf_forecast[-1], sept_sie[2:], apf_forecast[0])
+
+    ### APF Forecast ###
+
+    data_plot1_pp(
+        time_range=apf_forecast[-1],
+        data_obs=sept_sie[2:],
+        data_frcst=apf_forecast,
+        method="APF",
+    )
+    data_plot2_pp(
+        time_range=apf_forecast[-1],
+        data_obs=sept_sie[2:],
+        data_frcst=apf_forecast,
+        method="APF",
+    )
+    data_plot3_pp(
+        time_range=apf_forecast[-1],
+        data_obs=sept_sie[2:],
+        data_frcst=apf_forecast,
+        method="APF",
+    )
+    ### CAPF Forecast ###
+    data_plot1_pp(
+        time_range=capf_forecast[-1],
+        data_obs=sept_sie[2:],
+        data_frcst=capf_forecast,
+        method="CAPF",
+    )
+    data_plot2_pp(
+        time_range=capf_forecast[-1],
+        data_obs=sept_sie[2:],
+        data_frcst=capf_forecast,
+        method="CAPF",
+    )
+    data_plot3_pp(
+        time_range=capf_forecast[-1],
+        data_obs=sept_sie[2:],
+        data_frcst=capf_forecast,
+        method="CAPF",
+    )
+    ## Two Forecast Comparaison ##
+    data_plot4_pp(
+        time_range=capf_forecast[-1],
+        data_obs=sept_sie[2:],
+        data_frcst1=apf_forecast,
+        data_frcst2=capf_forecast,
+        method1="APF",
+        method2="CAPF",
+    )
+    ##########################################################################################################
+    ##### Verification of retrospective forecast with Post Processing #####
+    ### Post processing ###
+    ## Bias of the mean ##
+    new_bias_frcst_1_APF = mean_bias(apf_forecast[-1], apf_forecast[0])
+    new_bias_frcst_1_CAPF = mean_bias(capf_forecast[-1], capf_forecast[0])
+    ## Bias of the variability & mean ##
+    new_bias_frcst_2_APF = var_bias(apf_forecast[-1], new_bias_frcst_1_APF)
+    new_bias_frcst_2_CAPF = var_bias(capf_forecast[-1], new_bias_frcst_1_CAPF)
+    ## Bias of the trend line & variability & mean ##
+    pp_APF_forecast_val = trend_bias(
+        apf_forecast[-1], apf_forecast[-1], new_bias_frcst_2_APF
+    )
+    pp_CAPF_forecast_val = trend_bias(
+        capf_forecast[-1], capf_forecast[-1], new_bias_frcst_2_CAPF
+    )
+
+    # Defining the new set of forecast data #
+    pp_APF_forecast = apf_forecast
+    pp_CAPF_forecast = capf_forecast
+    pp_APF_forecast[0] = pp_APF_forecast_val
+    pp_CAPF_forecast[0] = pp_CAPF_forecast_val
+
+    ### Computation of the event prob mode with the post-processed forecast ###
+    event_APF_prob_mode_pp = np.zeros((3, year_f - event_start_year_analysis))
+    event_CAPF_prob_mode_pp = np.zeros((3, year_f - event_start_year_analysis))
+    for i in range(3):
+        event_APF_prob_mode_pp[i, :] = prob_frcst_event(
+            event_mode=(i + 1),
+            data=pp_APF_forecast,
+            time_range_data=pp_APF_forecast[-1],
+        )
+        event_CAPF_prob_mode[i, :] = prob_frcst_event(
+            event_mode=(i + 1),
+            data=pp_CAPF_forecast,
+            time_range_data=pp_CAPF_forecast[-1],
+        )
+    ### Display Event Prob with Post-Processing ###
+    plot_event_frcst_prob(
+        data=event_APF_prob_mode, time_range_data=apf_forecast[-1], method="APF_pp"
+    )
+    plot_event_frcst_prob(
+        data=event_CAPF_prob_mode, time_range_data=capf_forecast[-1], method="CAPF_pp"
+    )
+    plot_event_freq_and_prob(
+        apf_forecast[-1], event_freq_mode, event_APF_prob_mode, method="APF_pp"
+    )
+    plot_event_freq_and_prob(
+        capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, method="CAPF_pp"
+    )
+    plot_event_freq_and_prob_and_clim_no_sub(
+        apf_forecast[-1],
+        event_freq_mode,
+        event_APF_prob_mode,
+        clim_forecast,
+        method="APF_pp",
+    )
+    plot_event_freq_and_prob_and_clim_no_sub(
+        capf_forecast[-1],
+        event_freq_mode,
+        event_CAPF_prob_mode,
+        clim_forecast,
+        method="CAPF_pp",
+    )
+    ### Brier Score computation ###
+    bs_mode_APF = np.zeros(3)
+    bs_mode_CAPF = np.zeros(3)
+    bs_ref_mode_APF = np.zeros(3)
+    bs_ref_mode_CAPF = np.zeros(3)
+    bss_mode_APF = np.zeros(3)
+    bss_mode_CAPF = np.zeros(3)
+    name_event = [
+        "September SIE will be below the trend line",
+        "September SIE will be less than 4.5 million km²",
+        "September SIE will be less than previous year",
+    ]
+    print(
+        "                                    VERIFICATION WITH POST-PROCESSING                                                |"
+    )
+    print(
+        "--------------------------------------------------------------------------------------------------------------------"
+    )
+    for i in range(3):
+        bs_val_APF, bs_ref_val_APF, bss_val_APF = BS_and_BSS(
+            apf_forecast[-1], event_freq_mode, event_APF_prob_mode_pp, event_mode=i
+        )
+        bs_val_CAPF, bs_ref_val_CAPF, bss_val_CAPF = BS_and_BSS(
+            capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode_pp, event_mode=i
+        )
+        bs_mode_APF[i] = bs_val_APF
+        bs_mode_CAPF[i] = bs_val_CAPF
+        bs_ref_mode_APF[i] = bs_ref_val_APF
+        bs_ref_mode_CAPF[i] = bs_ref_val_CAPF
+        bss_mode_APF[i] = bss_val_APF
+        bss_mode_CAPF[i] = bss_val_CAPF
+        print(
+            "APF Brier Score (BS) for event : "
+            + name_event[i]
+            + " : {}".format(bs_val_APF)
+        )
+        print(
+            "CAPF Brier Score (BS) for event : "
+            + name_event[i]
+            + " : {}".format(bs_val_CAPF)
+        )
+        print("")
+        print(
+            "APF Reference Brier Score (BS_ref) for event : "
+            + name_event[i]
+            + " : {}".format(bs_ref_val_APF)
+        )
+        print(
+            "CAPF Reference Brier Score (BS_ref) for event : "
+            + name_event[i]
+            + " : {}".format(bs_ref_val_CAPF)
+        )
+        print("")
+        print(
+            "APF Brier Skill Score (BSS) for event : "
+            + name_event[i]
+            + " : {}".format(bss_val_APF)
+        )
+        print(
+            "CAPF Brier Skill Score (BSS) for event : "
+            + name_event[i]
+            + " : {}".format(bss_val_CAPF)
+        )
+        print(
+            "--------------------------------------------------------------------------------------------------------------------"
+        )
+
+    print(
+        "----------------------------------------------------------------------------------------------------------------------------------"
+    )
     ##########################################################################################################
     ##### Forecast for 2023 #####
