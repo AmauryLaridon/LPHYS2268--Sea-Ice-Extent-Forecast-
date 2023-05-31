@@ -34,7 +34,7 @@ figure = plt.figure(figsize=(16, 10))
 ### Data parameters ###
 data_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Data/osisaf_nh_sie_monthly.nc"
 save_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Figures/"
-transp = False  # Used for saving figures
+transp = True  # Used for saving figures
 # plt.style.use("dark_background")
 ##################################################### Data Plotting #########################################################
 # Correspond to question 3 of the report
@@ -414,9 +414,13 @@ def plot_forecast1(forecast, year_f_forecast, trend_line_opt, method):
         linestyle="None",
         marker="^",
         label=method + " Forecast + 2 std",
-        color="orange",
+        color="tab:red",
+        markersize="20",
+        elinewidth=4,
     )
-    plt.plot(forecast[4], forecast[3][2:], label="Observed Data", color="g")
+    plt.plot(
+        forecast[4], forecast[3][2:], label="Observed Data", color="g", linewidth=6
+    )
 
     if trend_line_opt == True:
         ## Trend line of the Forecast ##
@@ -441,13 +445,13 @@ def plot_forecast1(forecast, year_f_forecast, trend_line_opt, method):
         )
     else:
         mod_save_dir = ""
-    plt.title("Arctic Sea Ice Extent\nSeptember SIE " + method + "-Forecast ", size=30)
-    plt.xlabel("Year", size=25)
-    plt.xticks(np.arange(year_0 + 2, year_f_forecast, 2))
-    plt.ylabel(r"SIE [$10^6$ km²]", size=25)
-    plt.tick_params(axis="both", labelsize=20)
+    plt.title("September SIE " + method + "-Forecast ", size=35)
+    plt.xlabel("Year", size=30)
+    plt.xticks(np.arange(year_0 + 2, year_f_forecast, 5))
+    plt.ylabel(r"SIE [$10^6$ km²]", size=30)
+    plt.tick_params(axis="both", labelsize=25)
     plt.grid()
-    plt.legend(fontsize=20)
+    plt.legend(fontsize=28)
     plt.savefig(
         save_dir + "Sept_SIE_Forecast/SIE_Sept_" + method + "_Forecast" + mod_save_dir,
         dpi=300,
@@ -1149,6 +1153,7 @@ if __name__ == "__main__":
     plot_forecast1(
         forecast=apf_forecast, year_f_forecast=2022, trend_line_opt=False, method="APF"
     )
+
     ##### CAPF Forecasting system #####
     capf_forecast = CAPF(year_f_forecast=year_f_forecast)
     ### Display ###
@@ -1161,6 +1166,7 @@ if __name__ == "__main__":
         trend_line_opt=False,
         method="CAPF",
     )
+
     ## Comparaison ##
     plot_forecast2(
         apf_forecast,
@@ -1475,5 +1481,6 @@ if __name__ == "__main__":
     print(
         "----------------------------------------------------------------------------------------------------------------------------------"
     )
+
     ##########################################################################################################
     ##### Forecast for 2023 #####
