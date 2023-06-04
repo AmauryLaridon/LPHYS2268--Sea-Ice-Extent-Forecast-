@@ -19,21 +19,19 @@ import math
 # from scipy.stats.stats import pearsonr
 
 ################################################### Parameters #############################################################
-### Script parameters ###
-year_0 = 1979
-year_f = 2022
-N_years = year_f - year_0
-event_start_year_analysis = year_0 + 2
-year_f_forecast = 2022
-
-
+exec_22_script = False  # Boolean if we execute the script related to the analysis of the v1 dataset with data until 2022
+exec_23_script = True  # Boolean if we execute the script related to the analysis of the v2 dataset with data until 2023
 ### Display parameters ###
 plt.rcParams["text.usetex"] = True
 figure = plt.figure(figsize=(16, 10))
+spacing_coeff1 = 130
+spacing_coeff2 = 100
+spacing_coeff3 = 70
 
 ### Data parameters ###
-data_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Data/osisaf_nh_sie_monthly.nc"
-save_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Figures/"
+data_dir_v1 = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Data/osisaf_nh_sie_monthly_v1.nc"  # v1 corresponds to data set for SIE until 2022
+data_dir_v2 = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Data/osisaf_nh_sie_monthly_v2.nc"  # v2 corresponds to data set for SIE until 2023
+save_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Figures22/"
 transp = True  # Used for saving figures
 # plt.style.use("dark_background")
 ##################################################### Data Plotting #########################################################
@@ -41,8 +39,8 @@ transp = True  # Used for saving figures
 ##### Extraction of the Data #####
 
 
-def extract_data(month, file=data_dir, dtype="dict"):
-    """Extract september Sea Ice extent (sie) from 1979 to 2022. can return the data in two different parts depending on dtype parameter:
+def extract_data(month, file, dtype="dict"):
+    """Extract september Sea Ice extent (sie) from 1979 to 2022 or 2023 depends on the data version. can return the data in two different parts depending on dtype parameter:
     dtype = "dict" return a dictionnary {'1979': 7.556, '1980': 8.244,...}
     dtype = "array" return a np.array [7.556, 8.244, ...]
     """
@@ -73,7 +71,7 @@ def extract_data(month, file=data_dir, dtype="dict"):
 ##### Display #####
 
 
-def plot_sie(data):
+def plot_sie(data, time_range, year_f):
     """Plot of the SIE of the given month"""
     plt.plot(time_range, data, linewidth=4)
     plt.title("Sea Ice Extent (SIE) in September", size=30)
@@ -82,7 +80,15 @@ def plot_sie(data):
     plt.ylabel(r"Sea Ice Extent [$10^6$ km²]", size=25)
     plt.tick_params(axis="both", labelsize=20)
     plt.grid()
-    plt.savefig(save_dir + "Sept_SIE_Data/sept_sie.png", dpi=300, transparent=transp)
+    if year_f == 2022:
+        extr_lab = "22"
+    if year_f == 2023:
+        extr_lab = "23"
+    plt.savefig(
+        save_dir + "Sept_SIE_Data/sept_sie_" + extr_lab + ".png",
+        dpi=300,
+        transparent=transp,
+    )
     # plt.show()
     plt.clf()
 
@@ -228,7 +234,7 @@ def plot_event_freq(data, time_range_data):
 
 ##################################### Anomaly Persistent Forecast (APF) ########################################
 # Corresponds to section 7 of the instruction report
-def APF(year_f_forecast):
+def APF(year_f_forecast, data_set):
     """Computes a forecast for the SIE of a given month based on the Anomaly Persistent Forecast (APF) method.
     For more details read instructions. A mask is used because some data are missing (NaN).
     """
@@ -241,8 +247,8 @@ def APF(year_f_forecast):
     # array collecting the years where a forecast is perform. Will be used for plots
     time_range_forecast = np.arange(event_start_year_analysis, year_f_forecast)
     ### Data Retrival ###
-    sept_sie, time_range_s = extract_data(dtype="array", month=9)
-    may_sie, time_range_m = extract_data(dtype="array", month=5)
+    sept_sie, time_range_s = extract_data(dtype="array", file=data_set, month=9)
+    may_sie, time_range_m = extract_data(dtype="array", file=data_set, month=5)
 
     # array collecting the observed September SIE data at disposal
     observed_sept_data = [0, 0]
@@ -309,7 +315,7 @@ def APF(year_f_forecast):
 ##################################### Correlated Anomaly Persistent Forecast (CAPF) ########################################
 
 
-def CAPF(year_f_forecast):
+def CAPF(year_f_forecast, data_set):
     """Computes a forecast for the SIE of a given month based on the Correlated Anomaly Persistent Forecast (CAPF) method.
     The method is based on the APF except that the anomalyis multiplied by the correlation coefficient between the values
     of May and September"""
@@ -324,8 +330,8 @@ def CAPF(year_f_forecast):
     # array collecting the correlation coefficient between May and September for each year of the forecast
     corr_ar = []
     ### Data Retrival ###
-    sept_sie, time_range_s = extract_data(dtype="array", month=9)
-    may_sie, time_range_m = extract_data(dtype="array", month=5)
+    sept_sie, time_range_s = extract_data(dtype="array", file=data_set, month=9)
+    may_sie, time_range_m = extract_data(dtype="array", file=data_set, month=5)
 
     # array collecting the observed September SIE data at disposal
     observed_sept_data = [0, 0]
@@ -406,7 +412,11 @@ def CAPF(year_f_forecast):
 
 def plot_forecast1(forecast, year_f_forecast, trend_line_opt, method):
     """Plot of the forecast of SIE for September using APF or CAPF method and the observed data."""
-
+    figure = plt.figure(figsize=(16, 10))
+    if method == "APF":
+        col = "tab:orange"
+    if method == "CAPF":
+        col = "tab:red"
     plt.errorbar(
         forecast[4],
         forecast[0],
@@ -414,7 +424,7 @@ def plot_forecast1(forecast, year_f_forecast, trend_line_opt, method):
         linestyle="None",
         marker="^",
         label=method + " Forecast + 2 std",
-        color="tab:red",
+        color=col,
         markersize="20",
         elinewidth=4,
     )
@@ -465,7 +475,7 @@ def plot_forecast2(
     forecast1, forecast2, year_f_forecast, trend_line_opt, method1, method2
 ):
     """Plot of the forecast of SIE for September using APF or CAPF method and the observed data."""
-
+    figure = plt.figure(figsize=(16, 10))
     plt.errorbar(
         forecast1[4],
         forecast1[0],
@@ -560,7 +570,7 @@ def plot_forecast2(
 ##################################### 4 - Retrospective probabilistic forecast of the event ###################################
 
 
-def prob_frcst_event(event_mode, data, time_range_data):
+def prob_frcst_event(event_mode, data, data_set, time_range_data):
     """Computes the probability of a forecast to give an event following the definition of the 'event' choosen. Returns an array
     with the probability that the event chosen happens accordind to the forecast."""
 
@@ -570,7 +580,7 @@ def prob_frcst_event(event_mode, data, time_range_data):
     mean_forecast = data[0]  # assigning the mean_forecast array
     std_forecast = data[2]  # assigning the std_forecast array
     sept_sie, time_range_s = extract_data(
-        dtype="array", month=9
+        dtype="array", file=data_set, month=9
     )  # extraction of the full observed data
 
     if event_mode == 1:
@@ -866,7 +876,8 @@ def data_plot1_pp(time_range, data_obs, data_frcst, method):
         color="tab:orange",
         label="PP Bias of the mean " + method,
         s=400,
-    )"""
+    )
+    """
     ## Bias of the variability ##
     new_bias_frcst_2 = var_bias(data_obs, new_bias_frcst_1)
     # Biais of the mean plot #
@@ -877,7 +888,8 @@ def data_plot1_pp(time_range, data_obs, data_frcst, method):
         color="tab:orange",
         label="PP Bias of mean + var " + method,
         s=400,
-    )"""
+    )
+    """
     ## Bias of the trend line ##
     new_bias_frcst_3 = trend_bias(time_range, data_obs, new_bias_frcst_2)
     # Biais of the mean plot #
@@ -900,7 +912,9 @@ def data_plot1_pp(time_range, data_obs, data_frcst, method):
     plt.grid()
     plt.savefig(
         save_dir
-        + "Post-Processing/data_plot_verif_Biais_Mean_and_Var_and_Trend_APF.png",
+        + "Post-Processing/data_plot_verif_Biais_Mean_Var_Trend"
+        + method
+        + ".png",
         dpi=300,
         transparent=transp,
     )
@@ -1096,391 +1110,837 @@ def data_plot4_pp(time_range, data_obs, data_frcst1, data_frcst2, method1, metho
     # plt.show()
     plt.clf()
 
+    ### Print Output Last Year Forecast ###
+    last_year_frcst_meth1 = new_bias_frcst_3[-1]
+    last_year_frcst_meth2 = new_bias_frcst_32[-1]
+
+    print(
+        "-------------------------------- SEPTEMBER 2023 FORECAST -------------------------------------"
+    )
+    print(spacing_coeff2 * "-")
+    print(
+        "September 2023 SIE Forecast using APF Method : {:.4f} km²".format(
+            last_year_frcst_meth1
+        )
+    )
+    print(
+        "September 2023 SIE Forecast using CAPF Method : {:.4f} km²".format(
+            last_year_frcst_meth2
+        )
+    )
+    print(spacing_coeff2 * "-")
+
 
 ##############################################################################################################################
 ##################################################### Execution ##############################################################
 ##############################################################################################################################
 
 if __name__ == "__main__":
-    ##########################################################################################################
-    ##### Loading and visualizing Sea Ice Extent Data #####
-    sept_sie, time_range = extract_data(dtype="array", month=9)
-    ### Display ###
-    plot_sie(sept_sie)
-
-    ##########################################################################################################
-    ##### Estimating the trend line #####
-    # computation of the trend line coefficients
-    trend_line_coef = trend_line(time_range, sept_sie)
-    # What is the September 2023 (X = 2023) forecast based on simple extrapolation of the trend?
-    sept_23_forecast_trend_line = trend_line_coef[1] + trend_line_coef[0] * 2023
-    print(
-        "----------------------------------------------------------------------------------------------------------------------------------"
-    )
-    print(
-        "September 2023 forecast using simple extrapolation trend : {:.4f}.10^6 km².".format(
-            sept_23_forecast_trend_line
-        )
-    )
-    print(
-        "----------------------------------------------------------------------------------------------------------------------------------"
-    )
-    sept_forecast_trend_line = [
-        trend_line_coef[0] * year + trend_line_coef[1] for year in time_range
-    ]  # array collecting all the values associated to the trend line forecast
-    ### Display ###
-    plot_trend_line_forecast(trend_line=sept_forecast_trend_line)
-
-    ##########################################################################################################
-    ##### Event frequency based on data #####
-
-    event_freq_mode = np.zeros((3, year_f - event_start_year_analysis))
-    clim_forecast = np.zeros((3, year_f - event_start_year_analysis))
-    for i in range(3):
-        event_freq_mode[i, :], clim_forecast[i, :] = event_freq(
-            event_mode=(i + 1), data=sept_sie, time_range_data=time_range
-        )
-    ### Display ###
-    plot_event_freq(data=event_freq_mode, time_range_data=time_range)
-
-    ##########################################################################################################
-    ##### APF Forecasting system #####
-    apf_forecast = APF(year_f_forecast=year_f_forecast)
-    ### Display ###
-    plot_forecast1(
-        forecast=apf_forecast, year_f_forecast=2022, trend_line_opt=True, method="APF"
-    )
-    plot_forecast1(
-        forecast=apf_forecast, year_f_forecast=2022, trend_line_opt=False, method="APF"
-    )
-
-    ##### CAPF Forecasting system #####
-    capf_forecast = CAPF(year_f_forecast=year_f_forecast)
-    ### Display ###
-    plot_forecast1(
-        forecast=capf_forecast, year_f_forecast=2022, trend_line_opt=True, method="CAPF"
-    )
-    plot_forecast1(
-        forecast=capf_forecast,
-        year_f_forecast=2022,
-        trend_line_opt=False,
-        method="CAPF",
-    )
-
-    ## Comparaison ##
-    plot_forecast2(
-        apf_forecast,
-        capf_forecast,
-        year_f_forecast=2022,
-        trend_line_opt=True,
-        method1="APF",
-        method2="CAPF",
-    )
-    plot_forecast2(
-        apf_forecast,
-        capf_forecast,
-        year_f_forecast=2022,
-        trend_line_opt=False,
-        method1="APF",
-        method2="CAPF",
-    )
-
-    ##########################################################################################################
-    ##### Restrospective probabilistic forecast of the event #####
-    event_APF_prob_mode = np.zeros((3, year_f - event_start_year_analysis))
-    event_CAPF_prob_mode = np.zeros((3, year_f - event_start_year_analysis))
-    for i in range(3):
-        event_APF_prob_mode[i, :] = prob_frcst_event(
-            event_mode=(i + 1), data=apf_forecast, time_range_data=apf_forecast[-1]
-        )
-        event_CAPF_prob_mode[i, :] = prob_frcst_event(
-            event_mode=(i + 1), data=capf_forecast, time_range_data=capf_forecast[-1]
-        )
-    ### Display ###
-    plot_event_frcst_prob(
-        data=event_APF_prob_mode, time_range_data=apf_forecast[-1], method="APF"
-    )
-    plot_event_frcst_prob(
-        data=event_CAPF_prob_mode, time_range_data=capf_forecast[-1], method="CAPF"
-    )
-    plot_event_freq_and_prob(
-        apf_forecast[-1], event_freq_mode, event_APF_prob_mode, method="APF"
-    )
-    plot_event_freq_and_prob(
-        capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, method="CAPF"
-    )
-    plot_event_freq_and_prob_and_clim_no_sub(
-        apf_forecast[-1],
-        event_freq_mode,
-        event_APF_prob_mode,
-        clim_forecast,
-        method="APF",
-    )
-    plot_event_freq_and_prob_and_clim_no_sub(
-        capf_forecast[-1],
-        event_freq_mode,
-        event_CAPF_prob_mode,
-        clim_forecast,
-        method="CAPF",
-    )
-    ##########################################################################################################
-    ##### Verification of retrospective forecast without Post Processing #####
-    ### Brier Score computation ###
-    bs_mode_APF = np.zeros(3)
-    bs_mode_CAPF = np.zeros(3)
-    bs_ref_mode_APF = np.zeros(3)
-    bs_ref_mode_CAPF = np.zeros(3)
-    bss_mode_APF = np.zeros(3)
-    bss_mode_CAPF = np.zeros(3)
-    name_event = [
-        "September SIE will be below the trend line",
-        "September SIE will be less than 4.5 million km²",
-        "September SIE will be less than previous year",
-    ]
-    print(
-        "                                    VERIFICATION NO POST-PROCESSING                                                 |"
-    )
-    print(
-        "--------------------------------------------------------------------------------------------------------------------"
-    )
-    for i in range(3):
-        bs_val_APF, bs_ref_val_APF, bss_val_APF = BS_and_BSS(
-            apf_forecast[-1], event_freq_mode, event_APF_prob_mode, event_mode=i
-        )
-        bs_val_CAPF, bs_ref_val_CAPF, bss_val_CAPF = BS_and_BSS(
-            capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, event_mode=i
-        )
-        bs_mode_APF[i] = bs_val_APF
-        bs_mode_CAPF[i] = bs_val_CAPF
-        bs_ref_mode_APF[i] = bs_ref_val_APF
-        bs_ref_mode_CAPF[i] = bs_ref_val_CAPF
-        bss_mode_APF[i] = bss_val_APF
-        bss_mode_CAPF[i] = bss_val_CAPF
+    if exec_22_script == True:
+        ##########################################################################################################
+        ################################### Analysis with the 2022 Data Set#######################################
+        print(spacing_coeff1 * "-")
         print(
-            "APF Brier Score (BS) for event : "
-            + name_event[i]
-            + " : {}".format(bs_val_APF)
+            "------------------------------------------------ ANALYSIS WITH 2022 DATA SET -----------------------------------------------------"
         )
+        print(spacing_coeff1 * "-")
+        ##########################################################################################################
+        ### Script parameters ###
+        year_0 = 1979
+        year_f = 2022
+        N_years = year_f - year_0
+        event_start_year_analysis = year_0 + 2
+        year_f_forecast = 2022
+
+        ### Saving Figures Directory ###
+
+        save_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Figures/Figures22/"
+
+        ##########################################################################################################
+        ##### Loading and visualizing Sea Ice Extent Data 2022 #####
+        sept_sie, time_range = extract_data(dtype="array", file=data_dir_v1, month=9)
+        ### Display ###
+        plot_sie(sept_sie, time_range, year_f=2022)
+
+        ##########################################################################################################
+        ##### Estimating the trend line #####
+        # computation of the trend line coefficients
+        trend_line_coef = trend_line(time_range, sept_sie)
+        # What is the September 2023 (X = 2023) forecast based on simple extrapolation of the trend?
+        sept_23_forecast_trend_line = trend_line_coef[1] + trend_line_coef[0] * 2023
+
         print(
-            "CAPF Brier Score (BS) for event : "
-            + name_event[i]
-            + " : {}".format(bs_val_CAPF)
+            "September 2023 forecast using simple extrapolation trend : {:.4f}.10^6 km².".format(
+                sept_23_forecast_trend_line
+            )
         )
-        print("")
-        print(
-            "APF Reference Brier Score (BS_ref) for event : "
-            + name_event[i]
-            + " : {}".format(bs_ref_val_APF)
+        print(spacing_coeff2 * "-")
+        sept_forecast_trend_line = [
+            trend_line_coef[0] * year + trend_line_coef[1] for year in time_range
+        ]  # array collecting all the values associated to the trend line forecast
+        ### Display ###
+        plot_trend_line_forecast(trend_line=sept_forecast_trend_line)
+
+        ##########################################################################################################
+        ##### Event frequency based on data #####
+
+        event_freq_mode = np.zeros((3, year_f - event_start_year_analysis))
+        clim_forecast = np.zeros((3, year_f - event_start_year_analysis))
+        for i in range(3):
+            event_freq_mode[i, :], clim_forecast[i, :] = event_freq(
+                event_mode=(i + 1), data=sept_sie, time_range_data=time_range
+            )
+        ### Display ###
+        plot_event_freq(data=event_freq_mode, time_range_data=time_range)
+
+        ##########################################################################################################
+        ##### APF Forecasting system #####
+        apf_forecast = APF(year_f_forecast=year_f_forecast, data_set=data_dir_v1)
+        ### Display ###
+        plot_forecast1(
+            forecast=apf_forecast,
+            year_f_forecast=2022,
+            trend_line_opt=True,
+            method="APF",
         )
-        print(
-            "CAPF Reference Brier Score (BS_ref) for event : "
-            + name_event[i]
-            + " : {}".format(bs_ref_val_CAPF)
-        )
-        print("")
-        print(
-            "APF Brier Skill Score (BSS) for event : "
-            + name_event[i]
-            + " : {}".format(bss_val_APF)
-        )
-        print(
-            "CAPF Brier Skill Score (BSS) for event : "
-            + name_event[i]
-            + " : {}".format(bss_val_CAPF)
-        )
-        print(
-            "--------------------------------------------------------------------------------------------------------------------"
+        plot_forecast1(
+            forecast=apf_forecast,
+            year_f_forecast=2022,
+            trend_line_opt=False,
+            method="APF",
         )
 
-    print(
-        "----------------------------------------------------------------------------------------------------------------------------------"
-    )
-    ##########################################################################################################
-    ##### Post Processing of retrospective forecast #####
-
-    ### APF Forecast ###
-
-    data_plot1_pp(
-        time_range=apf_forecast[-1],
-        data_obs=sept_sie[2:],
-        data_frcst=apf_forecast,
-        method="APF",
-    )
-    data_plot2_pp(
-        time_range=apf_forecast[-1],
-        data_obs=sept_sie[2:],
-        data_frcst=apf_forecast,
-        method="APF",
-    )
-    data_plot3_pp(
-        time_range=apf_forecast[-1],
-        data_obs=sept_sie[2:],
-        data_frcst=apf_forecast,
-        method="APF",
-    )
-
-    ### CAPF Forecast ###
-    data_plot1_pp(
-        time_range=capf_forecast[-1],
-        data_obs=sept_sie[2:],
-        data_frcst=capf_forecast,
-        method="CAPF",
-    )
-    data_plot2_pp(
-        time_range=capf_forecast[-1],
-        data_obs=sept_sie[2:],
-        data_frcst=capf_forecast,
-        method="CAPF",
-    )
-    data_plot3_pp(
-        time_range=capf_forecast[-1],
-        data_obs=sept_sie[2:],
-        data_frcst=capf_forecast,
-        method="CAPF",
-    )
-    ## Two Forecast Comparaison ##
-    data_plot4_pp(
-        time_range=capf_forecast[-1],
-        data_obs=sept_sie[2:],
-        data_frcst1=apf_forecast,
-        data_frcst2=capf_forecast,
-        method1="APF",
-        method2="CAPF",
-    )
-    ##########################################################################################################
-    ##### Verification of retrospective forecast with Post Processing #####
-    ### Post processing ###
-    ## Bias of the mean ##
-    new_bias_frcst_1_APF = mean_bias(apf_forecast[-1], apf_forecast[0])
-    new_bias_frcst_1_CAPF = mean_bias(capf_forecast[-1], capf_forecast[0])
-    ## Bias of the variability & mean ##
-    new_bias_frcst_2_APF = var_bias(apf_forecast[-1], new_bias_frcst_1_APF)
-    new_bias_frcst_2_CAPF = var_bias(capf_forecast[-1], new_bias_frcst_1_CAPF)
-    ## Bias of the trend line & variability & mean ##
-    pp_APF_forecast_val = trend_bias(
-        apf_forecast[-1], apf_forecast[-1], new_bias_frcst_2_APF
-    )
-    pp_CAPF_forecast_val = trend_bias(
-        capf_forecast[-1], capf_forecast[-1], new_bias_frcst_2_CAPF
-    )
-
-    # Defining the new set of forecast data #
-    pp_APF_forecast = apf_forecast
-    pp_CAPF_forecast = capf_forecast
-    pp_APF_forecast[0] = pp_APF_forecast_val
-    pp_CAPF_forecast[0] = pp_CAPF_forecast_val
-
-    ### Computation of the event prob mode with the post-processed forecast ###
-    event_APF_prob_mode_pp = np.zeros((3, year_f - event_start_year_analysis))
-    event_CAPF_prob_mode_pp = np.zeros((3, year_f - event_start_year_analysis))
-    for i in range(3):
-        event_APF_prob_mode_pp[i, :] = prob_frcst_event(
-            event_mode=(i + 1),
-            data=pp_APF_forecast,
-            time_range_data=pp_APF_forecast[-1],
+        ##### CAPF Forecasting system #####
+        capf_forecast = CAPF(year_f_forecast=year_f_forecast, data_set=data_dir_v1)
+        ### Display ###
+        plot_forecast1(
+            forecast=capf_forecast,
+            year_f_forecast=2022,
+            trend_line_opt=True,
+            method="CAPF",
         )
-        event_CAPF_prob_mode[i, :] = prob_frcst_event(
-            event_mode=(i + 1),
-            data=pp_CAPF_forecast,
-            time_range_data=pp_CAPF_forecast[-1],
-        )
-    ### Display Event Prob with Post-Processing ###
-    plot_event_frcst_prob(
-        data=event_APF_prob_mode, time_range_data=apf_forecast[-1], method="APF_pp"
-    )
-    plot_event_frcst_prob(
-        data=event_CAPF_prob_mode, time_range_data=capf_forecast[-1], method="CAPF_pp"
-    )
-    plot_event_freq_and_prob(
-        apf_forecast[-1], event_freq_mode, event_APF_prob_mode, method="APF_pp"
-    )
-    plot_event_freq_and_prob(
-        capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, method="CAPF_pp"
-    )
-    plot_event_freq_and_prob_and_clim_no_sub(
-        apf_forecast[-1],
-        event_freq_mode,
-        event_APF_prob_mode,
-        clim_forecast,
-        method="APF_pp",
-    )
-    plot_event_freq_and_prob_and_clim_no_sub(
-        capf_forecast[-1],
-        event_freq_mode,
-        event_CAPF_prob_mode,
-        clim_forecast,
-        method="CAPF_pp",
-    )
-    ### Brier Score computation ###
-    bs_mode_APF = np.zeros(3)
-    bs_mode_CAPF = np.zeros(3)
-    bs_ref_mode_APF = np.zeros(3)
-    bs_ref_mode_CAPF = np.zeros(3)
-    bss_mode_APF = np.zeros(3)
-    bss_mode_CAPF = np.zeros(3)
-    name_event = [
-        "September SIE will be below the trend line",
-        "September SIE will be less than 4.5 million km²",
-        "September SIE will be less than previous year",
-    ]
-    print(
-        "                                    VERIFICATION WITH POST-PROCESSING                                                |"
-    )
-    print(
-        "--------------------------------------------------------------------------------------------------------------------"
-    )
-    for i in range(3):
-        bs_val_APF, bs_ref_val_APF, bss_val_APF = BS_and_BSS(
-            apf_forecast[-1], event_freq_mode, event_APF_prob_mode_pp, event_mode=i
-        )
-        bs_val_CAPF, bs_ref_val_CAPF, bss_val_CAPF = BS_and_BSS(
-            capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode_pp, event_mode=i
-        )
-        bs_mode_APF[i] = bs_val_APF
-        bs_mode_CAPF[i] = bs_val_CAPF
-        bs_ref_mode_APF[i] = bs_ref_val_APF
-        bs_ref_mode_CAPF[i] = bs_ref_val_CAPF
-        bss_mode_APF[i] = bss_val_APF
-        bss_mode_CAPF[i] = bss_val_CAPF
-        print(
-            "APF Brier Score (BS) for event : "
-            + name_event[i]
-            + " : {}".format(bs_val_APF)
-        )
-        print(
-            "CAPF Brier Score (BS) for event : "
-            + name_event[i]
-            + " : {}".format(bs_val_CAPF)
-        )
-        print("")
-        print(
-            "APF Reference Brier Score (BS_ref) for event : "
-            + name_event[i]
-            + " : {}".format(bs_ref_val_APF)
-        )
-        print(
-            "CAPF Reference Brier Score (BS_ref) for event : "
-            + name_event[i]
-            + " : {}".format(bs_ref_val_CAPF)
-        )
-        print("")
-        print(
-            "APF Brier Skill Score (BSS) for event : "
-            + name_event[i]
-            + " : {}".format(bss_val_APF)
-        )
-        print(
-            "CAPF Brier Skill Score (BSS) for event : "
-            + name_event[i]
-            + " : {}".format(bss_val_CAPF)
-        )
-        print(
-            "--------------------------------------------------------------------------------------------------------------------"
+        plot_forecast1(
+            forecast=capf_forecast,
+            year_f_forecast=2022,
+            trend_line_opt=False,
+            method="CAPF",
         )
 
-    print(
-        "----------------------------------------------------------------------------------------------------------------------------------"
-    )
+        ## Comparaison ##
+        plot_forecast2(
+            apf_forecast,
+            capf_forecast,
+            year_f_forecast=2022,
+            trend_line_opt=True,
+            method1="APF",
+            method2="CAPF",
+        )
+        plot_forecast2(
+            apf_forecast,
+            capf_forecast,
+            year_f_forecast=2022,
+            trend_line_opt=False,
+            method1="APF",
+            method2="CAPF",
+        )
 
-    ##########################################################################################################
-    ##### Forecast for 2023 #####
+        ##########################################################################################################
+        ##### Restrospective probabilistic forecast of the event #####
+        event_APF_prob_mode = np.zeros((3, year_f - event_start_year_analysis))
+        event_CAPF_prob_mode = np.zeros((3, year_f - event_start_year_analysis))
+        for i in range(3):
+            event_APF_prob_mode[i, :] = prob_frcst_event(
+                event_mode=(i + 1),
+                data=apf_forecast,
+                data_set=data_dir_v1,
+                time_range_data=apf_forecast[-1],
+            )
+            event_CAPF_prob_mode[i, :] = prob_frcst_event(
+                event_mode=(i + 1),
+                data=capf_forecast,
+                data_set=data_dir_v1,
+                time_range_data=capf_forecast[-1],
+            )
+        ### Display ###
+        plot_event_frcst_prob(
+            data=event_APF_prob_mode, time_range_data=apf_forecast[-1], method="APF"
+        )
+        plot_event_frcst_prob(
+            data=event_CAPF_prob_mode, time_range_data=capf_forecast[-1], method="CAPF"
+        )
+        plot_event_freq_and_prob(
+            apf_forecast[-1], event_freq_mode, event_APF_prob_mode, method="APF"
+        )
+        plot_event_freq_and_prob(
+            capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, method="CAPF"
+        )
+        plot_event_freq_and_prob_and_clim_no_sub(
+            apf_forecast[-1],
+            event_freq_mode,
+            event_APF_prob_mode,
+            clim_forecast,
+            method="APF",
+        )
+        plot_event_freq_and_prob_and_clim_no_sub(
+            capf_forecast[-1],
+            event_freq_mode,
+            event_CAPF_prob_mode,
+            clim_forecast,
+            method="CAPF",
+        )
+        ##########################################################################################################
+        ##### Verification of retrospective forecast without Post Processing #####
+        ### Brier Score computation ###
+        bs_mode_APF = np.zeros(3)
+        bs_mode_CAPF = np.zeros(3)
+        bs_ref_mode_APF = np.zeros(3)
+        bs_ref_mode_CAPF = np.zeros(3)
+        bss_mode_APF = np.zeros(3)
+        bss_mode_CAPF = np.zeros(3)
+        name_event = [
+            "September SIE will be below the trend line",
+            "September SIE will be less than 4.5 million km²",
+            "September SIE will be less than previous year",
+        ]
+        print(
+            "                                    VERIFICATION NO POST-PROCESSING                                                 |"
+        )
+        print(spacing_coeff2 * "-")
+        for i in range(3):
+            bs_val_APF, bs_ref_val_APF, bss_val_APF = BS_and_BSS(
+                apf_forecast[-1], event_freq_mode, event_APF_prob_mode, event_mode=i
+            )
+            bs_val_CAPF, bs_ref_val_CAPF, bss_val_CAPF = BS_and_BSS(
+                capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, event_mode=i
+            )
+            bs_mode_APF[i] = bs_val_APF
+            bs_mode_CAPF[i] = bs_val_CAPF
+            bs_ref_mode_APF[i] = bs_ref_val_APF
+            bs_ref_mode_CAPF[i] = bs_ref_val_CAPF
+            bss_mode_APF[i] = bss_val_APF
+            bss_mode_CAPF[i] = bss_val_CAPF
+            print(
+                "APF Brier Score (BS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_val_APF)
+            )
+            print(
+                "CAPF Brier Score (BS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_val_CAPF)
+            )
+            print("")
+            print(
+                "APF Reference Brier Score (BS_ref) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_ref_val_APF)
+            )
+            print(
+                "CAPF Reference Brier Score (BS_ref) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_ref_val_CAPF)
+            )
+            print("")
+            print(
+                "APF Brier Skill Score (BSS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bss_val_APF)
+            )
+            print(
+                "CAPF Brier Skill Score (BSS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bss_val_CAPF)
+            )
+            print(spacing_coeff2 * "-")
+
+        print(spacing_coeff1 * "-")
+        ##########################################################################################################
+        ##### Post Processing of retrospective forecast #####
+
+        ### APF Forecast ###
+
+        data_plot1_pp(
+            time_range=apf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=apf_forecast,
+            method="APF",
+        )
+        data_plot2_pp(
+            time_range=apf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=apf_forecast,
+            method="APF",
+        )
+        data_plot3_pp(
+            time_range=apf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=apf_forecast,
+            method="APF",
+        )
+
+        ### CAPF Forecast ###
+        data_plot1_pp(
+            time_range=capf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=capf_forecast,
+            method="CAPF",
+        )
+        data_plot2_pp(
+            time_range=capf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=capf_forecast,
+            method="CAPF",
+        )
+        data_plot3_pp(
+            time_range=capf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=capf_forecast,
+            method="CAPF",
+        )
+        ## Two Forecast Comparaison ##
+        data_plot4_pp(
+            time_range=capf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst1=apf_forecast,
+            data_frcst2=capf_forecast,
+            method1="APF",
+            method2="CAPF",
+        )
+        ##########################################################################################################
+        ##### Verification of retrospective forecast with Post Processing #####
+        ### Post processing ###
+        ## Bias of the mean ##
+        new_bias_frcst_1_APF = mean_bias(apf_forecast[-1], apf_forecast[0])
+        new_bias_frcst_1_CAPF = mean_bias(capf_forecast[-1], capf_forecast[0])
+        ## Bias of the variability & mean ##
+        new_bias_frcst_2_APF = var_bias(apf_forecast[-1], new_bias_frcst_1_APF)
+        new_bias_frcst_2_CAPF = var_bias(capf_forecast[-1], new_bias_frcst_1_CAPF)
+        ## Bias of the trend line & variability & mean ##
+        pp_APF_forecast_val = trend_bias(
+            apf_forecast[-1], apf_forecast[-1], new_bias_frcst_2_APF
+        )
+        pp_CAPF_forecast_val = trend_bias(
+            capf_forecast[-1], capf_forecast[-1], new_bias_frcst_2_CAPF
+        )
+
+        # Defining the new set of forecast data #
+        pp_APF_forecast = apf_forecast
+        pp_CAPF_forecast = capf_forecast
+        pp_APF_forecast[0] = pp_APF_forecast_val
+        pp_CAPF_forecast[0] = pp_CAPF_forecast_val
+
+        ### Computation of the event prob mode with the post-processed forecast ###
+        event_APF_prob_mode_pp = np.zeros((3, year_f - event_start_year_analysis))
+        event_CAPF_prob_mode_pp = np.zeros((3, year_f - event_start_year_analysis))
+        for i in range(3):
+            event_APF_prob_mode_pp[i, :] = prob_frcst_event(
+                event_mode=(i + 1),
+                data=pp_APF_forecast,
+                data_set=data_dir_v1,
+                time_range_data=pp_APF_forecast[-1],
+            )
+            event_CAPF_prob_mode[i, :] = prob_frcst_event(
+                event_mode=(i + 1),
+                data=pp_CAPF_forecast,
+                data_set=data_dir_v1,
+                time_range_data=pp_CAPF_forecast[-1],
+            )
+        ### Display Event Prob with Post-Processing ###
+        plot_event_frcst_prob(
+            data=event_APF_prob_mode, time_range_data=apf_forecast[-1], method="APF_pp"
+        )
+        plot_event_frcst_prob(
+            data=event_CAPF_prob_mode,
+            time_range_data=capf_forecast[-1],
+            method="CAPF_pp",
+        )
+        plot_event_freq_and_prob(
+            apf_forecast[-1], event_freq_mode, event_APF_prob_mode, method="APF_pp"
+        )
+        plot_event_freq_and_prob(
+            capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, method="CAPF_pp"
+        )
+        plot_event_freq_and_prob_and_clim_no_sub(
+            apf_forecast[-1],
+            event_freq_mode,
+            event_APF_prob_mode,
+            clim_forecast,
+            method="APF_pp",
+        )
+        plot_event_freq_and_prob_and_clim_no_sub(
+            capf_forecast[-1],
+            event_freq_mode,
+            event_CAPF_prob_mode,
+            clim_forecast,
+            method="CAPF_pp",
+        )
+        ### Brier Score computation ###
+        bs_mode_APF = np.zeros(3)
+        bs_mode_CAPF = np.zeros(3)
+        bs_ref_mode_APF = np.zeros(3)
+        bs_ref_mode_CAPF = np.zeros(3)
+        bss_mode_APF = np.zeros(3)
+        bss_mode_CAPF = np.zeros(3)
+        name_event = [
+            "September SIE will be below the trend line",
+            "September SIE will be less than 4.5 million km²",
+            "September SIE will be less than previous year",
+        ]
+        print(
+            "                                    VERIFICATION WITH POST-PROCESSING                                                |"
+        )
+        print(spacing_coeff2 * "-")
+        for i in range(3):
+            bs_val_APF, bs_ref_val_APF, bss_val_APF = BS_and_BSS(
+                apf_forecast[-1], event_freq_mode, event_APF_prob_mode_pp, event_mode=i
+            )
+            bs_val_CAPF, bs_ref_val_CAPF, bss_val_CAPF = BS_and_BSS(
+                capf_forecast[-1],
+                event_freq_mode,
+                event_CAPF_prob_mode_pp,
+                event_mode=i,
+            )
+            bs_mode_APF[i] = bs_val_APF
+            bs_mode_CAPF[i] = bs_val_CAPF
+            bs_ref_mode_APF[i] = bs_ref_val_APF
+            bs_ref_mode_CAPF[i] = bs_ref_val_CAPF
+            bss_mode_APF[i] = bss_val_APF
+            bss_mode_CAPF[i] = bss_val_CAPF
+            print(
+                "APF Brier Score (BS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_val_APF)
+            )
+            print(
+                "CAPF Brier Score (BS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_val_CAPF)
+            )
+            print("")
+            print(
+                "APF Reference Brier Score (BS_ref) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_ref_val_APF)
+            )
+            print(
+                "CAPF Reference Brier Score (BS_ref) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_ref_val_CAPF)
+            )
+            print("")
+            print(
+                "APF Brier Skill Score (BSS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bss_val_APF)
+            )
+            print(
+                "CAPF Brier Skill Score (BSS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bss_val_CAPF)
+            )
+            print(spacing_coeff2 * "-")
+
+    if exec_23_script == True:
+        ##########################################################################################################
+        ################################### Analysis with the 2023 Data Set ######################################
+        print(spacing_coeff1 * "-")
+        print(
+            "------------------------------------------------ ANALYSIS WITH 2023 DATA SET -----------------------------------------------------"
+        )
+        print(spacing_coeff1 * "-")
+        ##########################################################################################################
+        ### Script parameters ###
+        year_0 = 1979
+        year_f = 2023
+        N_years = year_f - year_0
+        event_start_year_analysis = year_0 + 2
+        year_f_forecast = 2023
+
+        ### Saving Figures Directory ###
+
+        save_dir = "/home/amaury/Bureau/LPHYS2268 - Forecast prediction and projection in Climate Science/Projet Perso/Figures/Figures23/"
+
+        ##########################################################################################################
+        ##### Loading and visualizing Sea Ice Extent Data 2023 #####
+        sept_sie, time_range = extract_data(dtype="array", file=data_dir_v2, month=9)
+        ### Display ###
+        plot_sie(sept_sie, time_range, year_f=2023)
+        ##########################################################################################################
+        ##### Estimating the trend line #####
+        # computation of the trend line coefficients
+        trend_line_coef = trend_line(time_range, sept_sie)
+        # What is the September 2023 (X = 2023) forecast based on simple extrapolation of the trend?
+        sept_23_forecast_trend_line = trend_line_coef[1] + trend_line_coef[0] * 2023
+
+        print(
+            "September 2023 forecast using simple extrapolation trend : {:.4f}.10^6 km².".format(
+                sept_23_forecast_trend_line
+            )
+        )
+        print(spacing_coeff2 * "-")
+        sept_forecast_trend_line = [
+            trend_line_coef[0] * year + trend_line_coef[1] for year in time_range
+        ]  # array collecting all the values associated to the trend line forecast
+        ### Display ###
+        plot_trend_line_forecast(trend_line=sept_forecast_trend_line)
+
+        ##########################################################################################################
+        ##### Event frequency based on data #####
+
+        event_freq_mode = np.zeros((3, year_f - event_start_year_analysis))
+        clim_forecast = np.zeros((3, year_f - event_start_year_analysis))
+        for i in range(3):
+            event_freq_mode[i, :], clim_forecast[i, :] = event_freq(
+                event_mode=(i + 1), data=sept_sie, time_range_data=time_range
+            )
+        ### Display ###
+        plot_event_freq(data=event_freq_mode, time_range_data=time_range)
+
+        ##########################################################################################################
+        ##### APF Forecasting system #####
+        apf_forecast = APF(year_f_forecast=year_f_forecast, data_set=data_dir_v1)
+        ### Display ###
+        plot_forecast1(
+            forecast=apf_forecast,
+            year_f_forecast=2023,
+            trend_line_opt=True,
+            method="APF",
+        )
+        plot_forecast1(
+            forecast=apf_forecast,
+            year_f_forecast=2023,
+            trend_line_opt=False,
+            method="APF",
+        )
+
+        ##### CAPF Forecasting system #####
+        capf_forecast = CAPF(year_f_forecast=year_f_forecast, data_set=data_dir_v1)
+        ### Display ###
+        plot_forecast1(
+            forecast=capf_forecast,
+            year_f_forecast=2023,
+            trend_line_opt=True,
+            method="CAPF",
+        )
+        plot_forecast1(
+            forecast=capf_forecast,
+            year_f_forecast=2023,
+            trend_line_opt=False,
+            method="CAPF",
+        )
+
+        ## Comparaison ##
+        plot_forecast2(
+            apf_forecast,
+            capf_forecast,
+            year_f_forecast=2023,
+            trend_line_opt=True,
+            method1="APF",
+            method2="CAPF",
+        )
+        plot_forecast2(
+            apf_forecast,
+            capf_forecast,
+            year_f_forecast=2023,
+            trend_line_opt=False,
+            method1="APF",
+            method2="CAPF",
+        )
+
+        ##########################################################################################################
+        ##### Restrospective probabilistic forecast of the event #####
+        event_APF_prob_mode = np.zeros((3, year_f - event_start_year_analysis))
+        event_CAPF_prob_mode = np.zeros((3, year_f - event_start_year_analysis))
+        for i in range(3):
+            event_APF_prob_mode[i, :] = prob_frcst_event(
+                event_mode=(i + 1),
+                data=apf_forecast,
+                data_set=data_dir_v1,
+                time_range_data=apf_forecast[-1],
+            )
+            event_CAPF_prob_mode[i, :] = prob_frcst_event(
+                event_mode=(i + 1),
+                data=capf_forecast,
+                data_set=data_dir_v1,
+                time_range_data=capf_forecast[-1],
+            )
+        ### Display ###
+        plot_event_frcst_prob(
+            data=event_APF_prob_mode, time_range_data=apf_forecast[-1], method="APF"
+        )
+        plot_event_frcst_prob(
+            data=event_CAPF_prob_mode, time_range_data=capf_forecast[-1], method="CAPF"
+        )
+        plot_event_freq_and_prob(
+            apf_forecast[-1], event_freq_mode, event_APF_prob_mode, method="APF"
+        )
+        plot_event_freq_and_prob(
+            capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, method="CAPF"
+        )
+        plot_event_freq_and_prob_and_clim_no_sub(
+            apf_forecast[-1],
+            event_freq_mode,
+            event_APF_prob_mode,
+            clim_forecast,
+            method="APF",
+        )
+        plot_event_freq_and_prob_and_clim_no_sub(
+            capf_forecast[-1],
+            event_freq_mode,
+            event_CAPF_prob_mode,
+            clim_forecast,
+            method="CAPF",
+        )
+        ##########################################################################################################
+        ##### Verification of retrospective forecast without Post Processing #####
+        ### Brier Score computation ###
+        bs_mode_APF = np.zeros(3)
+        bs_mode_CAPF = np.zeros(3)
+        bs_ref_mode_APF = np.zeros(3)
+        bs_ref_mode_CAPF = np.zeros(3)
+        bss_mode_APF = np.zeros(3)
+        bss_mode_CAPF = np.zeros(3)
+        name_event = [
+            "September SIE will be below the trend line",
+            "September SIE will be less than 4.5 million km²",
+            "September SIE will be less than previous year",
+        ]
+        print(
+            "                                    VERIFICATION NO POST-PROCESSING                                                 |"
+        )
+        print(spacing_coeff2 * "-")
+        for i in range(3):
+            bs_val_APF, bs_ref_val_APF, bss_val_APF = BS_and_BSS(
+                apf_forecast[-1], event_freq_mode, event_APF_prob_mode, event_mode=i
+            )
+            bs_val_CAPF, bs_ref_val_CAPF, bss_val_CAPF = BS_and_BSS(
+                capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, event_mode=i
+            )
+            bs_mode_APF[i] = bs_val_APF
+            bs_mode_CAPF[i] = bs_val_CAPF
+            bs_ref_mode_APF[i] = bs_ref_val_APF
+            bs_ref_mode_CAPF[i] = bs_ref_val_CAPF
+            bss_mode_APF[i] = bss_val_APF
+            bss_mode_CAPF[i] = bss_val_CAPF
+            print(
+                "APF Brier Score (BS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_val_APF)
+            )
+            print(
+                "CAPF Brier Score (BS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_val_CAPF)
+            )
+            print("")
+            print(
+                "APF Reference Brier Score (BS_ref) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_ref_val_APF)
+            )
+            print(
+                "CAPF Reference Brier Score (BS_ref) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_ref_val_CAPF)
+            )
+            print("")
+            print(
+                "APF Brier Skill Score (BSS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bss_val_APF)
+            )
+            print(
+                "CAPF Brier Skill Score (BSS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bss_val_CAPF)
+            )
+            print(spacing_coeff2 * "-")
+
+        print(spacing_coeff3 * "-")
+        ##########################################################################################################
+        ##### Post Processing of retrospective forecast #####
+
+        ### APF Forecast ###
+
+        data_plot1_pp(
+            time_range=apf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=apf_forecast,
+            method="APF",
+        )
+        data_plot2_pp(
+            time_range=apf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=apf_forecast,
+            method="APF",
+        )
+        data_plot3_pp(
+            time_range=apf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=apf_forecast,
+            method="APF",
+        )
+
+        ### CAPF Forecast ###
+        data_plot1_pp(
+            time_range=capf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=capf_forecast,
+            method="CAPF",
+        )
+        data_plot2_pp(
+            time_range=capf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=capf_forecast,
+            method="CAPF",
+        )
+        data_plot3_pp(
+            time_range=capf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst=capf_forecast,
+            method="CAPF",
+        )
+        ## Two Forecast Comparaison ##
+        data_plot4_pp(
+            time_range=capf_forecast[-1],
+            data_obs=sept_sie[2:],
+            data_frcst1=apf_forecast,
+            data_frcst2=capf_forecast,
+            method1="APF",
+            method2="CAPF",
+        )
+        ##########################################################################################################
+        ##### Verification of retrospective forecast with Post Processing #####
+        ### Post processing ###
+        ## Bias of the mean ##
+        new_bias_frcst_1_APF = mean_bias(apf_forecast[-1], apf_forecast[0])
+        new_bias_frcst_1_CAPF = mean_bias(capf_forecast[-1], capf_forecast[0])
+        ## Bias of the variability & mean ##
+        new_bias_frcst_2_APF = var_bias(apf_forecast[-1], new_bias_frcst_1_APF)
+        new_bias_frcst_2_CAPF = var_bias(capf_forecast[-1], new_bias_frcst_1_CAPF)
+        ## Bias of the trend line & variability & mean ##
+        pp_APF_forecast_val = trend_bias(
+            apf_forecast[-1], apf_forecast[-1], new_bias_frcst_2_APF
+        )
+        pp_CAPF_forecast_val = trend_bias(
+            capf_forecast[-1], capf_forecast[-1], new_bias_frcst_2_CAPF
+        )
+
+        # Defining the new set of forecast data #
+        pp_APF_forecast = apf_forecast
+        pp_CAPF_forecast = capf_forecast
+        pp_APF_forecast[0] = pp_APF_forecast_val
+        pp_CAPF_forecast[0] = pp_CAPF_forecast_val
+
+        ### Computation of the event prob mode with the post-processed forecast ###
+        event_APF_prob_mode_pp = np.zeros((3, year_f - event_start_year_analysis))
+        event_CAPF_prob_mode_pp = np.zeros((3, year_f - event_start_year_analysis))
+        for i in range(3):
+            event_APF_prob_mode_pp[i, :] = prob_frcst_event(
+                event_mode=(i + 1),
+                data=pp_APF_forecast,
+                data_set=data_dir_v1,
+                time_range_data=pp_APF_forecast[-1],
+            )
+            event_CAPF_prob_mode[i, :] = prob_frcst_event(
+                event_mode=(i + 1),
+                data=pp_CAPF_forecast,
+                data_set=data_dir_v1,
+                time_range_data=pp_CAPF_forecast[-1],
+            )
+        ### Display Event Prob with Post-Processing ###
+        plot_event_frcst_prob(
+            data=event_APF_prob_mode, time_range_data=apf_forecast[-1], method="APF_pp"
+        )
+        plot_event_frcst_prob(
+            data=event_CAPF_prob_mode,
+            time_range_data=capf_forecast[-1],
+            method="CAPF_pp",
+        )
+        plot_event_freq_and_prob(
+            apf_forecast[-1], event_freq_mode, event_APF_prob_mode, method="APF_pp"
+        )
+        plot_event_freq_and_prob(
+            capf_forecast[-1], event_freq_mode, event_CAPF_prob_mode, method="CAPF_pp"
+        )
+        plot_event_freq_and_prob_and_clim_no_sub(
+            apf_forecast[-1],
+            event_freq_mode,
+            event_APF_prob_mode,
+            clim_forecast,
+            method="APF_pp",
+        )
+        plot_event_freq_and_prob_and_clim_no_sub(
+            capf_forecast[-1],
+            event_freq_mode,
+            event_CAPF_prob_mode,
+            clim_forecast,
+            method="CAPF_pp",
+        )
+        ### Brier Score computation ###
+        bs_mode_APF = np.zeros(3)
+        bs_mode_CAPF = np.zeros(3)
+        bs_ref_mode_APF = np.zeros(3)
+        bs_ref_mode_CAPF = np.zeros(3)
+        bss_mode_APF = np.zeros(3)
+        bss_mode_CAPF = np.zeros(3)
+        name_event = [
+            "September SIE will be below the trend line",
+            "September SIE will be less than 4.5 million km²",
+            "September SIE will be less than previous year",
+        ]
+        print(
+            "                                    VERIFICATION WITH POST-PROCESSING                                                |"
+        )
+        print(spacing_coeff2 * "-")
+        for i in range(3):
+            bs_val_APF, bs_ref_val_APF, bss_val_APF = BS_and_BSS(
+                apf_forecast[-1], event_freq_mode, event_APF_prob_mode_pp, event_mode=i
+            )
+            bs_val_CAPF, bs_ref_val_CAPF, bss_val_CAPF = BS_and_BSS(
+                capf_forecast[-1],
+                event_freq_mode,
+                event_CAPF_prob_mode_pp,
+                event_mode=i,
+            )
+            bs_mode_APF[i] = bs_val_APF
+            bs_mode_CAPF[i] = bs_val_CAPF
+            bs_ref_mode_APF[i] = bs_ref_val_APF
+            bs_ref_mode_CAPF[i] = bs_ref_val_CAPF
+            bss_mode_APF[i] = bss_val_APF
+            bss_mode_CAPF[i] = bss_val_CAPF
+            print(
+                "APF Brier Score (BS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_val_APF)
+            )
+            print(
+                "CAPF Brier Score (BS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_val_CAPF)
+            )
+            print("")
+            print(
+                "APF Reference Brier Score (BS_ref) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_ref_val_APF)
+            )
+            print(
+                "CAPF Reference Brier Score (BS_ref) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bs_ref_val_CAPF)
+            )
+            print("")
+            print(
+                "APF Brier Skill Score (BSS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bss_val_APF)
+            )
+            print(
+                "CAPF Brier Skill Score (BSS) for event : "
+                + name_event[i]
+                + " : {:.3f}".format(bss_val_CAPF)
+            )
+            print(spacing_coeff2 * "-")
+
+        print(spacing_coeff1 * "-")
