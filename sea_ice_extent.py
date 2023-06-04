@@ -1124,10 +1124,23 @@ def data_plot4_pp(time_range, data_obs, data_frcst1, data_frcst2, method1, metho
         )
     )
     print(
+        "September 2023 95% Confidence Interval SIE Forecast using APF Method : [{:.4f}, {:.4f}] km²".format(
+            last_year_frcst_meth1 - data_frcst1[2][-1],
+            last_year_frcst_meth1 + data_frcst1[2][-1],
+        )
+    )
+    print(
         "September 2023 SIE Forecast using CAPF Method : {:.4f} km²".format(
             last_year_frcst_meth2
         )
     )
+    print(
+        "September 2023 95% Confidence Interval SIE Forecast using CAPF Method : [{:.4f}, {:.4f}] km²".format(
+            last_year_frcst_meth2 - data_frcst2[2][-1],
+            last_year_frcst_meth2 + data_frcst2[2][-1],
+        )
+    )
+
     print(spacing_coeff2 * "-")
 
 
