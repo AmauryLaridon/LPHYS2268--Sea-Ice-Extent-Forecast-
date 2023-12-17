@@ -9,7 +9,7 @@ This project has been done by Élise Françoisse, Augustin Lambotte, Amaury Lari
 
 **The goal of this project is to perform a seasonal prediction of summer Arctic Sea Ice Extent (SIE) using various forecasting techniques. The main production of this project is to realise an infography** in order to communicate our results towards student who has the same level as ours but who has not followed the course.  
 
-**The final infography of the project is a set of Instragram posts available at :** __insérer url __ 
+**The final infography of the project is a set of Instragram posts available at :** [Instagram Post](https://www.instagram.com/douglace7?igshid=YzVkODRmOTdmMw==)
 
 ### Organisation of the files 
 
